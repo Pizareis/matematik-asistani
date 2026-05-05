@@ -168,10 +168,9 @@ elif st.session_state["sayfa"] == "notlar":
                 mesaj = f"Aşağıdaki matematik notlarına göre '{soru}' konusunda 5 sınav sorusu üret, zorluk seviyelerini belirt:\n\n{baglam}"
 
             genai.configure(api_key=api_key)
-            model_ai = genai.GenerativeModel("gemini-1.5-flash")
+            model_ai = genai.GenerativeModel("gemini-2.0-flash")
             with st.spinner("🤖 Düşünüyor..."):
                 response = model_ai.generate_content(mesaj)
 
             st.markdown("### 💡 Cevap:")
             st.markdown(response.text)
-            
