@@ -1,6 +1,7 @@
 import streamlit as st
 import fitz
 import os
+import google.generativeai as genai
 
 st.set_page_config(page_title="Matematik Notu Asistanı", page_icon="📐", layout="wide")
 
@@ -50,13 +51,9 @@ h1, h2, h3 {
 </style>
 """, unsafe_allow_html=True)
 
-# Sayfa yönetimi
 if "sayfa" not in st.session_state:
     st.session_state["sayfa"] = "hosgeldin"
 
-# ─────────────────────────────────────────
-# 🌸 SAYFA 1: HOŞGELDİN
-# ─────────────────────────────────────────
 if st.session_state["sayfa"] == "hosgeldin":
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown("<h1 style='text-align:center; font-size:3rem'>🌸 Hoş Geldin Şekerim! 🌸</h1>", unsafe_allow_html=True)
@@ -88,9 +85,6 @@ if st.session_state["sayfa"] == "hosgeldin":
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; color:#ff69b4; font-size:0.9rem'>✨ Hocandan sevgiyle 💕</p>", unsafe_allow_html=True)
 
-# ─────────────────────────────────────────
-# 📚 SAYFA 2: NOTLAR
-# ─────────────────────────────────────────
 elif st.session_state["sayfa"] == "notlar":
     col_geri, col_baslik = st.columns([1, 8])
     with col_geri:
@@ -112,7 +106,7 @@ elif st.session_state["sayfa"] == "notlar":
     pdf_dosyalar = [f for f in os.listdir(NOTLAR_KLASOR) if f.endswith(".pdf")]
 
     if not pdf_dosyalar:
-        st.warning("⚠️ 'notlar' klasöründe hiç PDF bulunamadı! Klasöre PDF ekle 🌸")
+        st.warning("⚠️ 'notlar' klasöründe hiç PDF bulunamadı! 🌸")
         st.stop()
 
     cols = st.columns(3)
@@ -123,7 +117,6 @@ elif st.session_state["sayfa"] == "notlar":
                 st.session_state["secili_not"] = pdf
                 st.rerun()
 
-    # Not seçildiyse göster
     if "secili_not" in st.session_state:
         secili_not = st.session_state["secili_not"]
         ders_adi = secili_not.replace("_", " ").replace(".pdf", "")
@@ -161,11 +154,10 @@ elif st.session_state["sayfa"] == "notlar":
             soru = st.text_input("Hangi konuda soru üreteyim?", placeholder="Örnek: Determinant")
             prompt_tip = "soru-üret"
 
-        api_key = st.text_input("🔑 API Key:", type="password",
-                                 help="console.anthropic.com adresinden alabilirsin")
+        api_key = st.text_input("🔑 Gemini API Key:", type="password",
+                                 help="aistudio.google.com adresinden ücretsiz alabilirsin")
 
         if st.button("🚀 Gönder", type="primary") and soru and api_key:
-            import anthropic
             baglam = full_text[:4000]
 
             if prompt_tip == "soru-cevap":
@@ -175,14 +167,11 @@ elif st.session_state["sayfa"] == "notlar":
             else:
                 mesaj = f"Aşağıdaki matematik notlarına göre '{soru}' konusunda 5 sınav sorusu üret, zorluk seviyelerini belirt:\n\n{baglam}"
 
-            client = anthropic.Anthropic(api_key=api_key)
+            genai.configure(api_key=api_key)
+            model_ai = genai.GenerativeModel("gemini-1.5-flash")
             with st.spinner("🤖 Düşünüyor..."):
-                response = client.messages.create(
-                    model="claude-haiku-4-5-20251001",
-                    max_tokens=1000,
-                    messages=[{"role": "user", "content": mesaj}]
-                )
+                response = model_ai.generate_content(mesaj)
 
             st.markdown("### 💡 Cevap:")
-            st.markdown(response.content[0].text)
+            st.markdown(response.text)
             
